@@ -2,7 +2,6 @@ package br.com.alura.technews.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -14,6 +13,7 @@ import br.com.alura.technews.repository.NoticiaRepository
 import br.com.alura.technews.ui.activity.extensions.mostraErro
 import br.com.alura.technews.ui.recyclerview.adapter.ListaNoticiasAdapter
 import br.com.alura.technews.ui.viewmodel.ListaNoticiasViewModel
+import br.com.alura.technews.ui.viewmodel.factory.ListaNoticiasViewModelFactory
 import kotlinx.android.synthetic.main.activity_lista_noticias.*
 
 private const val TITULO_APPBAR = "Notícias"
@@ -21,11 +21,20 @@ private const val MENSAGEM_FALHA_CARREGAR_NOTICIAS = "Não foi possível carrega
 
 class ListaNoticiasActivity : AppCompatActivity() {
 
-    private val repository by lazy {
-        NoticiaRepository(AppDatabase.getInstance(this).noticiaDAO)
-    }
     private val adapter by lazy {
         ListaNoticiasAdapter(context = this)
+    }
+
+    private val viewModel by lazy {
+        // cria repositório para fazer o link com a viewModel da lista de notícias
+        val repository = NoticiaRepository(AppDatabase.getInstance(this).noticiaDAO)
+
+        // factory evita o vínculo com pacotes do android, contexto ou ciclo de vida, possui a dependência da ViewModel que é o repository
+        val factory = ListaNoticiasViewModelFactory(repository)
+
+        // provedor que cria o viewModel
+        val provedor = ViewModelProviders.of(this, factory)
+        provedor.get(ListaNoticiasViewModel::class.java)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,11 +43,6 @@ class ListaNoticiasActivity : AppCompatActivity() {
         title = TITULO_APPBAR
         configuraRecyclerView()
         configuraFabAdicionaNoticia()
-
-        // Permite identificar recriação da activity e receber a mesma instância do ViewModel antes da mudança de configuração da activity
-        val provedor = ViewModelProviders.of(this)
-        val viewModel = provedor.get(ListaNoticiasViewModel::class.java)
-        Log.i("viewmodel", viewModel.toString())
     }
 
     override fun onResume() {
@@ -64,7 +68,7 @@ class ListaNoticiasActivity : AppCompatActivity() {
     }
 
     private fun buscaNoticias() {
-        repository.buscaTodos(
+        viewModel.buscaTodos(
             quandoSucesso = {
                 adapter.atualiza(it)
             }, quandoFalha = {
