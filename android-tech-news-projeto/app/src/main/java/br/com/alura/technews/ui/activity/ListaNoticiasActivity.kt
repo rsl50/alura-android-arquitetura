@@ -11,6 +11,7 @@ import br.com.alura.technews.R
 import br.com.alura.technews.database.AppDatabase
 import br.com.alura.technews.model.Noticia
 import br.com.alura.technews.repository.NoticiaRepository
+import br.com.alura.technews.ui.activity.extensions.mostraErro
 import br.com.alura.technews.ui.recyclerview.adapter.ListaNoticiasAdapter
 import br.com.alura.technews.ui.viewmodel.ListaNoticiasViewModel
 import br.com.alura.technews.ui.viewmodel.factory.ListaNoticiasViewModelFactory
@@ -68,8 +69,11 @@ class ListaNoticiasActivity : AppCompatActivity() {
     }
 
     private fun buscaNoticias() {
-        viewModel.buscaTodos().observe(this, Observer {
-            adapter.atualiza(it)
+        viewModel.buscaTodos().observe(this, Observer {resource ->
+            resource.dado?.let{ adapter.atualiza(it) }
+            resource.erro?.let {
+                mostraErro(MENSAGEM_FALHA_CARREGAR_NOTICIAS)
+            }
         })
 //            quandoSucesso = {
 //                Log.i("teste", "atualizando notícias")
