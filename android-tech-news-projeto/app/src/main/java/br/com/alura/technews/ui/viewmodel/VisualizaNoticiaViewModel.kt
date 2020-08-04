@@ -7,15 +7,11 @@ import br.com.alura.technews.repository.NoticiaRepository
 import br.com.alura.technews.repository.Resource
 
 class VisualizaNoticiaViewModel (
-    private val id: Long,
+    id: Long,
     private val repository: NoticiaRepository
 ) : ViewModel(){
 
-    private val noticiaEncontrada = buscaPorId()
-
-    // este valor é retornado pela activity, mantendo a coerência com o ciclo de vida
-    // permitindo assim o envio do retorno para property 'noticiaEncontrada'
-    fun buscaPorId() = repository.buscaPorId(id)
+    val noticiaEncontrada = repository.buscaPorId(id)
 
     fun remove(): LiveData<Resource<Void?>> {
         return noticiaEncontrada.value?.run {
