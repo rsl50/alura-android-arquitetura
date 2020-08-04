@@ -22,7 +22,7 @@ class NoticiaRepository(
         buscaInterno(quandoSucesso = atualizaListaNoticias)
 
         buscaNaApi(quandoSucesso = atualizaListaNoticias,
-            quandoFalha = {erro ->
+            quandoFalha = { erro ->
             val resourceAtual = noticiasEncontradas.value
             val resourceDeFalha = criaResourceDeFalha<List<Noticia>?>(resourceAtual, erro)
             noticiasEncontradas.value = resourceDeFalha
@@ -41,7 +41,7 @@ class NoticiaRepository(
 
         salvaNaApi(noticia, quandoSucesso = {
             liveData.value = Resource(null)
-        }, quandoFalha = {erro ->
+        }, quandoFalha = { erro ->
             liveData.value = Resource(null, erro = erro)
         })
 
@@ -49,11 +49,15 @@ class NoticiaRepository(
     }
 
     fun remove(
-        noticia: Noticia,
-        quandoSucesso: () -> Unit,
-        quandoFalha: (erro: String?) -> Unit
-    ) {
-        removeNaApi(noticia, quandoSucesso, quandoFalha)
+        noticia: Noticia
+    ) : LiveData<Resource<Void?>> {
+        val liveData = MutableLiveData<Resource<Void?>>()
+        removeNaApi(noticia, quandoSucesso = {
+            liveData.value = Resource(null)
+        }, quandoFalha = { erro ->
+            liveData.value = Resource(null, erro)
+        })
+        return liveData
     }
 
     fun edita(
@@ -64,7 +68,7 @@ class NoticiaRepository(
 
         editaNaApi(noticia, quandoSucesso = {
             liveData.value = Resource(null)
-        }, quandoFalha = {erro ->
+        }, quandoFalha = { erro ->
             liveData.value = Resource(null, erro = erro)
         })
 
@@ -72,13 +76,18 @@ class NoticiaRepository(
     }
 
     fun buscaPorId(
-        noticiaId: Long,
-        quandoSucesso: (noticiaEncontrada: Noticia?) -> Unit
-    ) {
+        noticiaId: Long
+    ): LiveData<Noticia?> {
+
+        val liveData = MutableLiveData<Noticia?>()
+
         BaseAsyncTask(quandoExecuta = {
             dao.buscaPorId(noticiaId)
-        }, quandoFinaliza = quandoSucesso)
-            .execute()
+        }, quandoFinaliza = {
+            liveData.value = it
+        }).execute()
+
+        return liveData
     }
 
     private fun buscaNaApi(
