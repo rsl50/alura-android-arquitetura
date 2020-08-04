@@ -44,11 +44,11 @@ class ListaNoticiasActivity : AppCompatActivity() {
         title = TITULO_APPBAR
         configuraRecyclerView()
         configuraFabAdicionaNoticia()
+        buscaNoticias()
     }
 
     override fun onResume() {
         super.onResume()
-        buscaNoticias()
     }
 
     private fun configuraFabAdicionaNoticia() {
