@@ -43,10 +43,6 @@ class VisualizaNoticiaActivity : AppCompatActivity() {
         buscaNoticiaSelecionada()
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.visualiza_noticia_menu, menu)
         return super.onCreateOptionsMenu(menu)

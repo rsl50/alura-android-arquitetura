@@ -47,10 +47,6 @@ class ListaNoticiasActivity : AppCompatActivity() {
         buscaNoticias()
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
     private fun configuraFabAdicionaNoticia() {
         activity_lista_noticias_fab_salva_noticia.setOnClickListener {
             abreFormularioModoCriacao()
