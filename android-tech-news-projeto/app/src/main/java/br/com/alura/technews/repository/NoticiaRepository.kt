@@ -7,6 +7,11 @@ import br.com.alura.technews.asynctask.BaseAsyncTask
 import br.com.alura.technews.database.dao.NoticiaDAO
 import br.com.alura.technews.model.Noticia
 import br.com.alura.technews.retrofit.webclient.NoticiaWebClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class NoticiaRepository(
     private val dao: NoticiaDAO,
@@ -50,11 +55,16 @@ class NoticiaRepository(
 
         val liveData = MutableLiveData<Resource<Void?>>()
 
-        salvaNaApi(noticia, quandoSucesso = {
-            liveData.value = Resource(null)
-        }, quandoFalha = { erro ->
-            liveData.value = Resource(null, erro = erro)
-        })
+        salvaNaApi(noticia)
+
+        // Caso salvaNaApi tenha executado com sucesso, o liveData é atualizado
+        liveData.value = Resource(dado = null)
+
+//        salvaNaApi(noticia, quandoSucesso = {
+//            liveData.value = Resource(null)
+//        }, quandoFalha = { erro ->
+//            liveData.value = Resource(null, erro = erro)
+//        })
 
         return liveData
     }
@@ -108,6 +118,14 @@ class NoticiaRepository(
         return dao.buscaTodos()
     }
 
+    private fun salvaNaApi(noticia: Noticia) {
+        val scope = CoroutineScope(IO)
+        scope.launch {
+            webclient.salva(noticia)?.let { noticiaSalva ->
+                dao.salva(noticiaSalva)
+            }
+        }
+    }
 
     private fun salvaNaApi(
         noticia: Noticia,
@@ -138,11 +156,22 @@ class NoticiaRepository(
         noticia: Noticia,
         quandoSucesso: () -> Unit
     ) {
-        BaseAsyncTask(quandoExecuta = {
+        // Dispatchers.IO indica que a coroutine dentro deste escopo será executada em paralelo e não na main thread
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
             dao.salva(noticia)
-        }, quandoFinaliza = {
-            quandoSucesso()
-        }).execute()
+
+            // Dispatchers.Main indica que a coroutine dentro deste escopo será executada na main thread
+            withContext(Dispatchers.Main) {
+                quandoSucesso()
+            }
+        }
+
+//        BaseAsyncTask(quandoExecuta = {
+//            dao.salva(noticia)
+//        }, quandoFinaliza = {
+//            quandoSucesso()
+//        }).execute()
     }
 
     private fun removeNaApi(
